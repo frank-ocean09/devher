@@ -1,22 +1,27 @@
+import ImpactImage1 from "@/assets/Impact.jpg"
+import ImpactImage2 from "@/assets/image.png"
+import ImpactImage4 from "@/assets/impact4.jpg"
+
+
 
 const stories = [
     {
         name: "Bibbette Lucy Kanu",
         school: "Bilingual High School",
         quote: "DevHer showed me that I can build anything I imagine. Now I want to study computer science in college.",
-        image: "/src/assets/Impact.jpg",
+        image: ImpactImage1,
     },
     {
         name: "Sia M T Gborie",
         school: "Bilingual High School",
         quote: "I built my first circuit in DevHer Club. It was the coolest thing I've ever done!",
-        image: "/src/assets/image.png",
+        image: ImpactImage2,
     },
     {
         name: "Jarie F Jalloh",
         school: "Bilingual High School",
         quote: "The mentors at DevHer inspired me to start my own coding club one day.",
-        image: "/src/assets/IMG_E1263.JPG",
+        image: ImpactImage4,
     },
 ]
 export function Impact() {

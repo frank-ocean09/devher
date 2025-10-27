@@ -1,10 +1,18 @@
+import ImpactImage3 from "@/assets/impact3.jpg"
+import gallery2 from "@/assets/gallery2.jpg"
+import gallery3 from "@/assets/gallery3.jpg"
+import gallery4 from "@/assets/gallery4.png"
+import gallery5 from "@/assets/gallery5.jpg"
+import gallery from "@/assets/gallery.jpg"
+
+
 const images = [
-  { src: "src/assets/IMG_E1268.JPG", alt: "Photo 1" },
-  { src: "src/assets/IMG_1213.JPG", alt: "Photo 2" },
-  { src: "src/assets/IMG_E1265.JPG", alt: "Photo 3" },
-  { src: "src/assets/IMG_1211.JPG", alt: "Photo 4" },
-  { src: "src/assets/IMG_1258.PNG", alt: "Photo 5" },
-  { src: "src/assets/IMG_1266.PNG", alt: "Photo 6" },
+  { src: ImpactImage3, alt: "Photo 1" },
+  { src: gallery2, alt: "Photo 2" },
+  { src: gallery3, alt: "Photo 3" },
+  { src: gallery4, alt: "Photo 4" },
+  { src: gallery5, alt: "Photo 5" },
+  { src: gallery, alt: "Photo 6" },
 ];
 
 export function Gallery() {
