@@ -78,7 +78,6 @@ export default function Design() {
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Save to history only on mouse up
   const saveToHistory = (newShapes: Shape[]) => {
     const newHistory = history.slice(0, historyIndex + 1)
     newHistory.push(newShapes)
@@ -130,6 +129,7 @@ export default function Design() {
     const newShapes = [...shapes, newShape]
     setShapes(newShapes)
     saveToHistory(newShapes)
+    setSelectedShapeId(newShape.id)
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,6 +155,7 @@ export default function Design() {
         const newShapes = [...shapes, newShape]
         setShapes(newShapes)
         saveToHistory(newShapes)
+        setSelectedShapeId(newShape.id)
       }
       reader.readAsDataURL(file)
     }
@@ -366,11 +367,15 @@ export default function Design() {
     saveToHistory(newShapes)
   }
 
-  // Real-time color updates
+  // ──────────────────────────────────────────────────────────────
+  //  ONLY update the SELECTED shape when color changes
+  // ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (selectedShapeId) {
       setShapes((prev) =>
-        prev.map((s) => (s.id === selectedShapeId ? { ...s, color: selectedColor } : s))
+        prev.map((s) =>
+          s.id === selectedShapeId ? { ...s, color: selectedColor } : s
+        )
       )
     }
   }, [selectedColor, selectedShapeId])
@@ -378,64 +383,173 @@ export default function Design() {
   useEffect(() => {
     if (selectedShapeId) {
       setShapes((prev) =>
-        prev.map((s) => (s.id === selectedShapeId ? { ...s, strokeColor: selectedStrokeColor } : s))
+        prev.map((s) =>
+          s.id === selectedShapeId ? { ...s, strokeColor: selectedStrokeColor } : s
+        )
       )
     }
   }, [selectedStrokeColor, selectedShapeId])
 
   useEffect(() => {
-    const shape = shapes.find((s) => s.id === selectedShapeId)
-    if (selectedShapeId && shape?.type === "text") {
-      setShapes((prev) =>
-        prev.map((s) => (s.id === selectedShapeId ? { ...s, textColor: selectedTextColor } : s))
-      )
+    if (selectedShapeId) {
+      const shape = shapes.find((s) => s.id === selectedShapeId)
+      if (shape?.type === "text") {
+        setShapes((prev) =>
+          prev.map((s) =>
+            s.id === selectedShapeId ? { ...s, textColor: selectedTextColor } : s
+          )
+        )
+      }
     }
   }, [selectedTextColor, selectedShapeId, shapes])
 
-  
+  // ──────────────────────────────────────────────────────────────
+  //  EXPORT TO PNG – ALL SHAPES, NO ERRORS
+  // ──────────────────────────────────────────────────────────────
   const exportToPNG = async () => {
-    if (!canvasRef.current) return
+    if (!canvasRef.current || shapes.length === 0) {
+      alert("Add at least one shape to export!")
+      return
+    }
 
-    const button = document.getElementById("export-btn")
-    const original = button?.innerHTML
-    if (button) button.innerHTML = "Exporting…"
+    const btn = document.getElementById("export-btn")
+    const original = btn?.innerHTML
+    if (btn) btn.innerHTML = "Exporting…"
 
     try {
-      const html2canvas = (await import("html2canvas")).default
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      if (!ctx) throw new Error("Canvas 2D context not supported")
 
-      const canvas = await html2canvas(canvasRef.current, {
-        backgroundColor: canvasBackground,
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        foreignObjectRendering: true, // Critical for rotated SVGs
-        onclone: (clonedDoc) => {
-          clonedDoc.querySelectorAll(".pointer-events-none").forEach(el => el.remove())
-          clonedDoc.querySelectorAll(".cursor-grab").forEach(el => el.remove())
-          clonedDoc.querySelectorAll(".ring-2").forEach(el => el.classList.remove("ring-2", "ring-primary"))
-        },
-      })
+      const { width, height } = canvasRef.current.getBoundingClientRect()
+      canvas.width = width * 2
+      canvas.height = height * 2
+      ctx.scale(2, 2)
+      ctx.fillStyle = canvasBackground
+      ctx.fillRect(0, 0, width, height)
+
+      for (const shape of shapes) {
+        ctx.save()
+        const cx = shape.x + shape.width / 2
+        const cy = shape.y + shape.height / 2
+        ctx.translate(cx, cy)
+        ctx.rotate((shape.rotation || 0) * (Math.PI / 180))
+        ctx.translate(-cx, -cy)
+
+        // Rectangle / Circle
+        if (shape.type === "rectangle" || shape.type === "circle") {
+          ctx.fillStyle = shape.color
+          ctx.strokeStyle = shape.strokeColor || "transparent"
+          ctx.lineWidth = shape.strokeWidth || 0
+          if (shape.type === "circle") {
+            ctx.beginPath()
+            ctx.ellipse(cx, cy, shape.width / 2, shape.height / 2, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.stroke()
+          } else {
+            ctx.fillRect(shape.x, shape.y, shape.width, shape.height)
+            ctx.strokeRect(shape.x, shape.y, shape.width, shape.height)
+          }
+        }
+
+        // Text
+        else if (shape.type === "text" && shape.text) {
+          ctx.font = `${shape.fontWeight === "bold" ? "bold " : ""}${
+            shape.fontStyle === "italic" ? "italic " : ""
+          }${shape.fontSize}px ${shape.fontFamily}`
+          ctx.fillStyle = shape.textColor || "#000"
+          ctx.textAlign = (shape.textAlign as CanvasTextAlign) || "center"
+          ctx.textBaseline = "middle"
+          ctx.fillText(shape.text, cx, cy)
+        }
+
+        // Line / Arrow
+        else if ((shape.type === "line" || shape.type === "arrow") && shape.strokeColor) {
+          ctx.strokeStyle = shape.strokeColor
+          ctx.lineWidth = shape.strokeWidth || 2
+          const y = shape.y + shape.height / 2
+          ctx.beginPath()
+          ctx.moveTo(shape.x, y)
+          ctx.lineTo(shape.x + shape.width, y)
+          ctx.stroke()
+
+          if (shape.type === "arrow") {
+            const headLen = 10
+            ctx.beginPath()
+            ctx.moveTo(shape.x + shape.width, y)
+            ctx.lineTo(shape.x + shape.width - headLen, y - headLen / 2)
+            ctx.lineTo(shape.x + shape.width - headLen, y + headLen / 2)
+            ctx.closePath()
+            ctx.fillStyle = shape.strokeColor
+            ctx.fill()
+          }
+        }
+
+        // Polygon / Star
+        else if (shape.type === "polygon" || shape.type === "star") {
+          const points = shape.points || 6
+          const radius = Math.min(shape.width, shape.height) / 2
+          const centerX = shape.x + shape.width / 2
+          const centerY = shape.y + shape.height / 2
+
+          ctx.fillStyle = shape.color
+          ctx.strokeStyle = shape.strokeColor || "transparent"
+          ctx.lineWidth = shape.strokeWidth || 0
+
+          ctx.beginPath()
+          for (let i = 0; i < (shape.type === "star" ? points * 2 : points); i++) {
+            const angle = (i * (shape.type === "star" ? Math.PI : 2 * Math.PI)) / points - Math.PI / 2
+            const r = shape.type === "star" && i % 2 === 1 ? radius / 2 : radius
+            const px = centerX + r * Math.cos(angle)
+            const py = centerY + r * Math.sin(angle)
+            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)
+          }
+          ctx.closePath()
+          ctx.fill()
+          ctx.stroke()
+        }
+
+        // Image (safe)
+        else if (shape.type === "image" && shape.imageUrl) {
+          const img = new Image()
+          img.crossOrigin = "anonymous"
+          const loadPromise = new Promise<void>((resolve, reject) => {
+            img.onload = () => resolve()
+            img.onerror = () => reject(new Error("Image load failed"))
+          })
+          img.src = shape.imageUrl
+          try {
+            await loadPromise
+            ctx.drawImage(img, shape.x, shape.y, shape.width, shape.height)
+          } catch {
+            ctx.fillStyle = "#e5e5e5"
+            ctx.fillRect(shape.x, shape.y, shape.width, shape.height)
+            ctx.fillStyle = "#666"
+            ctx.font = "14px Arial"
+            ctx.textAlign = "center"
+            ctx.textBaseline = "middle"
+            ctx.fillText("Image", cx, cy)
+          }
+        }
+
+        ctx.restore()
+      }
 
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob)
-          const link = document.createElement("a")
-          link.href = url
-          link.download = `design-${Date.now()}.png`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = `design-${Date.now()}.png`
+          a.click()
           URL.revokeObjectURL(url)
-        } else {
-          alert("Export failed: Canvas is empty.")
         }
       }, "image/png")
     } catch (err) {
-      console.error("html2canvas error:", err)
-      alert("Export failed!\n\n1. Internet required\n2. Run: npm install html2canvas\n3. Try again")
+      console.error(err)
+      alert("Export failed.")
     } finally {
-      if (button && original) button.innerHTML = original
+      if (btn && original) btn.innerHTML = original
     }
   }
 
@@ -498,6 +612,7 @@ export default function Design() {
             transform,
             transformOrigin: "center",
           }}
+          crossOrigin="anonymous"
         />
       )
     }
@@ -828,7 +943,7 @@ export default function Design() {
 
               {shapes.length === 0 && (
                 <div className="flex items-center justify-center h-full text-gray-400 text-xs sm:text-sm text-center px-4">
-                  Add shapes to start designing (double-click text to edit, drag to move, resize with handles, rotate with top circle)
+                  Add shapes to start designing
                 </div>
               )}
             </div>
@@ -843,7 +958,7 @@ export default function Design() {
             </div>
           </div>
 
-          {/* Rest of UI */}
+          {/* Tutorials, Learning Path, Projects */}
           <div className="mb-12">
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-5">Design Tutorials</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
