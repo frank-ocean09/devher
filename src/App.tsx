@@ -8,7 +8,7 @@ import Programs from "./components/Home/Programs"
 import Coding from "./Pages/DigitalHub/Coding"
 import Design from "./Pages/DigitalHub/Design"
 import Digitalhub from "./Pages/DigitalHub/Digitalhub"
-import Electronics from "./Pages/DigitalHub/Electronics"
+import Electronics from "./Pages/DigitalHub/electronics"
 import Pitch from "./Pages/DigitalHub/Pitch"
 import Home from "./Pages/Home/Home"
 import { Route, Routes } from "react-router-dom"
@@ -25,7 +25,7 @@ function App() {
        <Route path="/Gallery" element={<Gallery/>}/>
        <Route path="/Contact" element={<Contact/>}/>
        <Route path="/digitalhub" element={<Digitalhub/>}/>
-       <Route path="/digital-hub/electronics" element={<Electronics/>}/>
+      <Route path="/digital-hub/electronics" element={<Electronics/>}/>
        <Route path="/digital-hub/coding" element={<Coding/>}/>
        <Route path="/digital-hub/Design" element={<Design/>}/>
        <Route path="/digital-hub/Pitch" element={<Pitch/>}/>
