@@ -1,6 +1,17 @@
 import type React from "react"
-import { useState, useRef } from "react"
-import { ArrowLeft, Power, Youtube, Zap, Info, Trash2, Save, Download, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import {
+  ArrowLeft,
+  Power,
+  Youtube,
+  Zap,
+  Info,
+  Trash2,
+  Save,
+  Download,
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react"
 import Navbar from "@/components/Utils/Navbar"
 import Footer from "@/components/Utils/Footer"
 import ComponentVisual from "@/components/Utils/ComponentVisual"
@@ -214,6 +225,23 @@ export default function Electronics() {
   const [activeTab, setActiveTab] = useState<"components" | "info">("components")
   const canvasRef = useRef<HTMLDivElement>(null)
 
+  // Track canvas size for centering
+  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 500 })
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (canvasRef.current) {
+        setCanvasSize({
+          width: canvasRef.current.clientWidth,
+          height: canvasRef.current.clientHeight,
+        })
+      }
+    }
+    updateSize()
+    window.addEventListener("resize", updateSize)
+    return () => window.removeEventListener("resize", updateSize)
+  }, [])
+
   const loadCircuit = (circuit: (typeof prebuiltCircuits)[0]) => {
     setComponents(circuit.components)
     setSelectedCircuit(circuit.name)
@@ -247,16 +275,21 @@ export default function Electronics() {
     const x = e.clientX - rect.left - 30
     const y = e.clientY - rect.top - 30
 
-    setComponents((prev) => prev.map((c) => (c.id === draggedComponent.id ? { ...c, x, y } : c)))
+    setComponents((prev) =>
+      prev.map((c) => (c.id === draggedComponent.id ? { ...c, x, y } : c))
+    )
     setDraggedComponent(null)
   }
 
   const addComponentToCanvas = (type: ComponentType) => {
+    const centerX = canvasSize.width / 2 - 30
+    const centerY = canvasSize.height / 2 - 30
+
     const newComponent: Component = {
       id: `${type}-${Date.now()}`,
       type,
-      x: Math.random() * 400 + 50,
-      y: Math.random() * 250 + 50,
+      x: centerX,
+      y: centerY,
       connections: [],
       rotation: 0,
       scale: 1,
