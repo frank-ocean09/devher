@@ -211,7 +211,6 @@ export default function Electronics() {
     { name: string; data: { components: Component[]; wires: Wire[] } }[]
   >([])
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<"components" | "info">("components")
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const loadCircuit = (circuit: (typeof prebuiltCircuits)[0]) => {
@@ -274,15 +273,15 @@ export default function Electronics() {
     const hasLoad = components.some((c) => ["led", "buzzer", "fan"].includes(c.type))
 
     if (!hasBattery) {
-      setCircuitWarning("No power source! Add a battery to your circuit.")
+      setCircuitWarning("⚠️ No power source! Add a battery to your circuit.")
       return false
     }
     if (!hasLoad) {
-      setCircuitWarning("No output component! Add an LED, buzzer, or fan.")
+      setCircuitWarning("⚠️ No output component! Add an LED, buzzer, or fan.")
       return false
     }
     if (wires.length === 0) {
-      setCircuitWarning("Components not connected! Connect them with wires.")
+      setCircuitWarning("⚠️ Components not connected! Connect them with wires.")
       return false
     }
 
@@ -322,10 +321,13 @@ export default function Electronics() {
     e.stopPropagation()
 
     if (connectingFrom === null) {
+      // Start connection
       setConnectingFrom(componentId)
     } else if (connectingFrom === componentId) {
+      // Cancel connection
       setConnectingFrom(null)
     } else {
+      // Complete connection
       const wireId = `wire-${connectingFrom}-${componentId}`
       const reverseWireId = `wire-${componentId}-${connectingFrom}`
 
@@ -380,56 +382,32 @@ export default function Electronics() {
   return (
     <main className="min-h-screen bg-black">
       <Navbar />
-      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-32 pb-16 px-4 sm:px-6">
         <div className="container mx-auto max-w-[1600px]">
           <a
             href="/digitalhub"
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-6 text-sm sm:text-base transition-colors"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-8 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ArrowLeft className="h-5 w-5" />
             Back to Digital Hub
           </a>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
             Electronics & <span className="text-primary">Hardware Lab</span>
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground mb-8 sm:mb-12 max-w-3xl">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-12">
             Build and simulate circuits with visual, interactive components
           </p>
 
-          {/* Mobile Tabs */}
-          <div className="lg:hidden flex border-b border-primary/20 mb-6">
-            <button
-              onClick={() => setActiveTab("components")}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === "components"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Components
-            </button>
-            <button
-              onClick={() => setActiveTab("info")}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                activeTab === "info"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Info
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-12 sm:mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
             {/* Component Tray - Left */}
-            <div className={`${activeTab === "components" ? "block" : "hidden lg:block"} lg:col-span-3`}>
-              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-20 lg:top-24 max-h-[70vh] lg:max-h-none overflow-y-auto">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <div className="lg:col-span-3">
+              <div className="p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-24">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Zap className="h-5 w-5 text-primary" />
                   Components
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                <div className="space-y-2">
                   {(
                     [
                       "battery",
@@ -448,15 +426,12 @@ export default function Electronics() {
                       key={type}
                       onClick={() => addComponentToCanvas(type)}
                       onMouseEnter={() => setSelectedComponent(type)}
-                      onMouseLeave={() => setSelectedComponent(null)}
-                      className="p-3 rounded-xl bg-black/50 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 transition-all flex items-center gap-2 sm:gap-3 group text-left"
+                      className="w-full p-3 rounded-xl bg-black/50 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 transition-all flex items-center gap-3 group"
                     >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 flex items-center justify-center">
                         <ComponentVisual componentType={type} isPowered={false} />
                       </div>
-                      <span className="text-xs sm:text-sm text-white font-medium capitalize truncate">
-                        {type}
-                      </span>
+                      <span className="text-sm text-white font-medium capitalize">{type}</span>
                     </button>
                   ))}
                 </div>
@@ -465,26 +440,26 @@ export default function Electronics() {
 
             {/* Workspace - Center */}
             <div className="lg:col-span-6">
-              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-white">Circuit Workspace</h3>
-                  <div className="flex flex-wrap gap-2">
+              <div className="p-6 rounded-3xl bg-card border-2 border-primary/30">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-white">Circuit Workspace</h3>
+                  <div className="flex gap-2">
                     <button
                       onClick={simulate}
-                      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 ${
+                      className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 ${
                         isPowerOn
                           ? "bg-primary text-black"
                           : "bg-black/50 border border-primary/30 text-primary hover:bg-primary/10"
                       }`}
                     >
-                      <Power className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Power className="h-4 w-4" />
                       {isPowerOn ? "Stop" : "Simulate"}
                     </button>
                     <button
                       onClick={saveCircuit}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30 transition-all flex items-center gap-1.5 text-xs sm:text-sm"
+                      className="px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30 transition-all flex items-center gap-2"
                     >
-                      <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Save className="h-4 w-4" />
                       Save
                     </button>
                     <button
@@ -495,24 +470,24 @@ export default function Electronics() {
                         setCircuitWarning(null)
                         setConnectingFrom(null)
                       }}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all flex items-center gap-1.5 text-xs sm:text-sm"
+                      className="px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all flex items-center gap-2"
                     >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-4 w-4" />
                       Reset
                     </button>
                   </div>
                 </div>
 
                 {connectingFrom && (
-                  <div className="mb-3 p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 text-blue-400 text-xs sm:text-sm">
-                    <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    Click another component to connect, or click the same to cancel
+                  <div className="mb-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center gap-2 text-blue-400 text-sm">
+                    <Zap className="h-4 w-4" />
+                    Click another component to connect, or click the same component to cancel
                   </div>
                 )}
 
                 {circuitWarning && (
-                  <div className="mb-3 p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-2 text-yellow-400 text-xs sm:text-sm">
-                    <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-2 text-yellow-400 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
                     {circuitWarning}
                   </div>
                 )}
@@ -522,12 +497,13 @@ export default function Electronics() {
                   ref={canvasRef}
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
-                  className="bg-black/50 rounded-2xl p-3 sm:p-4 min-h-80 sm:min-h-96 lg:min-h-[500px] border-2 border-primary/20 relative overflow-hidden"
+                  className="bg-black/50 rounded-2xl p-4 min-h-[500px] border-2 border-primary/20 relative overflow-hidden"
                   style={{
                     backgroundImage: "radial-gradient(circle, #333 1px, transparent 1px)",
-                    backgroundSize: "16px 16px",
+                    backgroundSize: "20px 20px",
                   }}
                 >
+                  {/* Wires */}
                   <svg className="absolute inset-0 w-full h-full pointer-events-none">
                     {wires.map((wire) => {
                       const fromComp = components.find((c) => c.id === wire.from)
@@ -535,6 +511,7 @@ export default function Electronics() {
                       if (!fromComp || !toComp) return null
                       return (
                         <g key={wire.id}>
+                          {/* Invisible clickable area */}
                           <line
                             x1={fromComp.x + 30}
                             y1={fromComp.y + 30}
@@ -545,6 +522,7 @@ export default function Electronics() {
                             className="pointer-events-auto cursor-pointer"
                             onClick={(e) => handleWireClick(wire.id, e)}
                           />
+                          {/* Visible wire */}
                           <line
                             x1={fromComp.x + 30}
                             y1={fromComp.y + 30}
@@ -560,6 +538,7 @@ export default function Electronics() {
                     })}
                   </svg>
 
+                  {/* Components */}
                   {components.map((component) => (
                     <div
                       key={component.id}
@@ -594,7 +573,7 @@ export default function Electronics() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                           resizeComponent(component.id, 0.1)
+                            resizeComponent(component.id, 0.1)
                           }}
                           className="w-6 h-6 rounded bg-primary/20 text-primary hover:bg-primary hover:text-black transition-all text-xs"
                         >
@@ -614,61 +593,63 @@ export default function Electronics() {
                   ))}
 
                   {components.length === 0 && (
-                    <div className="flex items-center justify-center h-full text-muted-foreground text-center px-4">
+                    <div className="flex items-center justify-center h-full text-muted-foreground text-center">
                       <div>
-                        <Zap className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-primary/50" />
-                        <p className="text-sm sm:text-base">Click components on the left to add them</p>
-                        <p className="text-xs sm:text-sm mt-1">Drag to move • Click X to remove</p>
-                        <p className="text-xs sm:text-sm mt-1">Click components to connect with wires</p>
+                        <Zap className="h-12 w-12 mx-auto mb-4 text-primary/50" />
+                        <p>Click components on the left to add them to your circuit</p>
+                        <p className="text-sm mt-2">Drag to reposition • Click X to remove</p>
+                        <p className="text-sm mt-1">Click components to connect with wires</p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
-                  <div className="p-2 sm:p-3 rounded-xl bg-black/50 border border-primary/20 text-center">
+                {/* Indicators */}
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  <div className="p-3 rounded-xl bg-black/50 border border-primary/20">
                     <p className="text-xs text-muted-foreground mb-1">Voltage</p>
-                    <p className="text-lg sm:text-xl font-bold text-primary">{voltage}V</p>
+                    <p className="text-xl font-bold text-primary">{voltage}V</p>
                   </div>
-                  <div className="p-2 sm:p-3 rounded-xl bg-black/50 border border-primary/20 text-center">
+                  <div className="p-3 rounded-xl bg-black/50 border border-primary/20">
                     <p className="text-xs text-muted-foreground mb-1">Status</p>
-                    <p className="text-lg sm:text-xl font-bold text-primary">{isPowerOn ? "ON" : "OFF"}</p>
+                    <p className="text-xl font-bold text-primary">{isPowerOn ? "ON" : "OFF"}</p>
                   </div>
-                  <div className="p-2 sm:p-3 rounded-xl bg-black/50 border border-primary/20 text-center">
+                  <div className="p-3 rounded-xl bg-black/50 border border-primary/20">
                     <p className="text-xs text-muted-foreground mb-1">Parts</p>
-                    <p className="text-lg sm:text-xl font-bold text-primary">{components.length}</p>
+                    <p className="text-xl font-bold text-primary">{components.length}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Info Sidebar - Right */}
-            <div className={`${activeTab === "info" ? "block" : "hidden lg:block"} lg:col-span-3`}>
-              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-20 lg:top-24">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <div className="lg:col-span-3">
+              <div className="p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-24">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Info className="h-5 w-5 text-primary" />
                   Component Info
                 </h3>
                 {selectedComponent ? (
                   <div className="space-y-4">
-                    <div className="flex justify-center p-3 sm:p-4 bg-black/50 rounded-xl">
+                    <div className="flex justify-center p-4 bg-black/50 rounded-xl">
                       <ComponentVisual componentType={selectedComponent} isPowered={false} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white mb-2 text-sm sm:text-base">{componentInfo[selectedComponent].name}</h4>
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-3">
+                      <h4 className="font-bold text-white mb-2">{componentInfo[selectedComponent].name}</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
                         {componentInfo[selectedComponent].description}
                       </p>
                       <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-                        <p className="text-xs text-primary font-medium mb-1">Tips:</p>
+                        <p className="text-xs text-primary font-medium mb-1">💡 Tips:</p>
                         <p className="text-xs text-muted-foreground">{componentInfo[selectedComponent].tips}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-muted-foreground">Hover over a component to see details</p>
+                  <p className="text-sm text-muted-foreground">Hover over a component to see details</p>
                 )}
 
+                {/* Circuit Checklist */}
                 <div className="mt-6 pt-6 border-t border-primary/20">
                   <h4 className="font-bold text-white mb-3 text-sm">Circuit Checklist</h4>
                   <div className="space-y-2">
@@ -715,6 +696,7 @@ export default function Electronics() {
                   </div>
                 </div>
 
+                {/* Saved Circuits */}
                 {savedCircuits.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-primary/20">
                     <h4 className="font-bold text-white mb-3 text-sm flex items-center gap-2">
@@ -739,29 +721,29 @@ export default function Electronics() {
           </div>
 
           {/* Pre-built Circuits */}
-          <div className="mb-12 sm:mb-16 p-6 sm:p-8 rounded-3xl bg-card border-2 border-primary/30">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Pre-built Circuits</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="mb-16 p-8 rounded-3xl bg-card border-2 border-primary/30">
+            <h2 className="text-2xl font-bold text-white mb-6">Pre-built Circuits</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {prebuiltCircuits.map((circuit) => (
                 <div
                   key={circuit.name}
                   className="p-4 rounded-2xl bg-black/50 border border-primary/20 hover:border-primary/50 transition-all"
                 >
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">{circuit.name}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3">{circuit.description}</p>
+                  <h3 className="text-lg font-bold text-white mb-2">{circuit.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{circuit.description}</p>
                   <div className="flex flex-col gap-2">
                     <a
                       href={circuit.youtubeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all text-xs sm:text-sm"
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all text-sm font-medium"
                     >
-                      <Youtube className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Youtube className="h-4 w-4" />
                       Watch Tutorial
                     </a>
                     <button
                       onClick={() => loadCircuit(circuit)}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 text-primary hover:bg-primary hover:text-black transition-all text-xs sm:text-sm"
+                      className="px-4 py-2 rounded-xl bg-primary/20 text-primary hover:bg-primary hover:text-black transition-all text-sm font-medium"
                     >
                       Try It Yourself
                     </button>
@@ -772,27 +754,25 @@ export default function Electronics() {
           </div>
 
           {/* Learning Path */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-card border-2 border-primary/30">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Learning Path</h2>
-            <div className="space-y-2">
+          <div className="p-8 rounded-3xl bg-card border-2 border-primary/30">
+            <h2 className="text-2xl font-bold text-white mb-6">Learning Path</h2>
+            <div className="space-y-3">
               {lessons.map((lesson, index) => (
                 <div key={index} className="rounded-xl bg-black/50 border border-primary/20 overflow-hidden">
                   <button
                     onClick={() => setExpandedLesson(expandedLesson === index ? null : index)}
-                    className="w-full p-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:bg-primary/5 transition-colors text-left"
+                    className="w-full p-4 flex items-center gap-3 hover:bg-primary/5 transition-colors"
                   >
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs sm:text-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                       {index + 1}
                     </div>
-                    <span className="text-sm sm:text-base text-white font-medium flex-1">{lesson.title}</span>
+                    <span className="text-white font-medium flex-1 text-left">{lesson.title}</span>
                     <Zap
-                      className={`h-4 w-4 sm:h-5 sm:w-5 text-primary transition-transform ${expandedLesson === index ? "rotate-180" : ""}`}
+                      className={`h-5 w-5 text-primary transition-transform ${expandedLesson === index ? "rotate-180" : ""}`}
                     />
                   </button>
                   {expandedLesson === index && (
-                    <div className="p-3 sm:p-4 pt-0 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                      {lesson.content}
-                    </div>
+                    <div className="p-4 pt-0 text-muted-foreground text-sm leading-relaxed">{lesson.content}</div>
                   )}
                 </div>
               ))}
