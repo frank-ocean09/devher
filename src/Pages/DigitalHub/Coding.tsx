@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import Navbar from "@/components/Utils/Navbar"
-import { ArrowLeft, Play, Code, Youtube, CheckCircle2, X } from "lucide-react"
+import {
+  ArrowLeft,
+  Play,
+  Code,
+  Youtube,
+  CheckCircle2,
+  X,
+} from "lucide-react"
 import Footer from "@/components/Utils/Footer"
 
 type Language = "javascript" | "html" | "css" | "python"
@@ -10,13 +17,16 @@ const lessons = [
   {
     id: 1,
     title: "Hello World - Your First Program",
-    description: "Learn the basics of programming by writing your first 'Hello World' program in multiple languages.",
-    youtubeUrl: "https://youtu.be/W6NZfCO5SIk?si=g0H15LsmCR_ok2Izl",
+    description:
+      "Learn the basics of programming by writing your first 'Hello World' program in multiple languages.",
+    youtubeUrl:
+      "https://youtu.be/W6NZfCO5SIk?si=g0H15LsmCR_ok2Izl",
     languages: {
       javascript: {
         code: `// Welcome to DevHer Coding!
 console.log("Hello, DevHer!");`,
-        exercise: "Change the text to display your own name instead of 'DevHer'",
+        exercise:
+          "Change the text to display your own name instead of 'DevHer'",
       },
       html: {
         code: `<!DOCTYPE html>
@@ -28,7 +38,8 @@ console.log("Hello, DevHer!");`,
   <h1>Hello, DevHer!</h1>
 </body>
 </html>`,
-        exercise: "Add a paragraph below the heading with your favorite quote",
+        exercise:
+          "Add a paragraph below the heading with your favorite quote",
       },
       css: {
         code: `h1 {
@@ -48,7 +59,8 @@ print("Hello, DevHer!")`,
   {
     id: 2,
     title: "Variables & Data Types",
-    description: "Understand how to store and use data in your programs with variables.",
+    description:
+      "Understand how to store and use data in your programs with variables.",
     youtubeUrl: "https://youtube.com/watch?v=variables-tutorial",
     languages: {
       javascript: {
@@ -60,7 +72,8 @@ let isStudent = true;
 console.log("Name: " + name);
 console.log("Age: " + age);
 console.log("Is Student: " + isStudent);`,
-        exercise: "Create variables for your favorite color, food, and hobby, then display them",
+        exercise:
+          "Create variables for your favorite color, food, and hobby, then display them",
       },
       python: {
         code: `# Variables in Python
@@ -78,7 +91,8 @@ print(f"Is Student: {is_student}")`,
   {
     id: 3,
     title: "Loops & Conditionals",
-    description: "Learn how to repeat actions and make decisions in your code.",
+    description:
+      "Learn how to repeat actions and make decisions in your code.",
     youtubeUrl: "https://youtube.com/watch?v=loops-tutorial",
     languages: {
       javascript: {
@@ -96,7 +110,8 @@ if (score >= 90) {
 } else {
   console.log("Grade: C");
 }`,
-        exercise: "Write a loop that prints only even numbers from 1 to 20",
+        exercise:
+          "Write a loop that prints only even numbers from 1 to 20",
       },
       python: {
         code: `# For loop in Python
@@ -111,14 +126,16 @@ elif score >= 80:
     print("Grade: B")
 else:
     print("Grade: C")`,
-        exercise: "Create a program that checks if a number is positive, negative, or zero",
+        exercise:
+          "Create a program that checks if a number is positive, negative, or zero",
       },
     },
   },
   {
     id: 4,
     title: "Functions & Logic",
-    description: "Organize your code into reusable functions and build complex logic.",
+    description:
+      "Organize your code into reusable functions and build complex logic.",
     youtubeUrl: "https://youtube.com/watch?v=functions-tutorial",
     languages: {
       javascript: {
@@ -133,7 +150,8 @@ function add(a, b) {
 
 console.log(greet("DevHer"));
 console.log("Sum: " + add(5, 3));`,
-        exercise: "Create a function that calculates the area of a rectangle",
+        exercise:
+          "Create a function that calculates the area of a rectangle",
       },
       python: {
         code: `# Functions in Python
@@ -145,14 +163,16 @@ def add(a, b):
 
 print(greet("DevHer"))
 print(f"Sum: {add(5, 3)}")`,
-        exercise: "Write a function that checks if a number is even or odd",
+        exercise:
+          "Write a function that checks if a number is even or odd",
       },
     },
   },
   {
     id: 5,
     title: "Build a Simple Web Page",
-    description: "Combine HTML, CSS, and JavaScript to create your first interactive webpage.",
+    description:
+      "Combine HTML, CSS, and JavaScript to create your first interactive webpage.",
     youtubeUrl: "https://youtube.com/watch?v=webpage-tutorial",
     languages: {
       html: {
@@ -184,7 +204,8 @@ print(f"Sum: {add(5, 3)}")`,
   <button onclick="alert('Hello from DevHer!')">Click Me!</button>
 </body>
 </html>`,
-        exercise: "Add your name to the heading and change the button text to something creative",
+        exercise:
+          "Add your name to the heading and change the button text to something creative",
       },
     },
   },
@@ -192,37 +213,50 @@ print(f"Sum: {add(5, 3)}")`,
 
 export default function Coding() {
   const [language, setLanguage] = useState<Language>("javascript")
-  const [code, setCode] = useState(lessons[0].languages.javascript!.code)
+  const [code, setCode] = useState(
+    lessons[0].languages.javascript!.code
+  )
   const [output, setOutput] = useState("")
   const [currentLesson, setCurrentLesson] = useState(0)
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
   const [showYoutubeModal, setShowYoutubeModal] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState("")
 
-  // Pyodide loading (once)
   const pyodideReady = useRef<Promise<any> | null>(null)
 
+  /* ------------------------------------------------------------------ */
+  /* Pyodide loading (once)                                            */
+  /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (!pyodideReady.current) {
       const script = document.createElement("script")
-      script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"
+      script.src =
+        "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"
       script.onload = async () => {
         // @ts-ignore
-        const py = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/" })
+        const py = await loadPyodide({
+          indexURL:
+            "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/",
+        })
         pyodideReady.current = py
       }
       document.body.appendChild(script)
     }
   }, [])
 
-  // Real Python execution
+  /* ------------------------------------------------------------------ */
+  /* Python execution                                                   */
+  /* ------------------------------------------------------------------ */
   const runPython = async (code: string): Promise<string> => {
     const py = await pyodideReady.current
     if (!py) return "Pyodide is still loading..."
 
-    const output: string[] = []
+    const out: string[] = []
     try {
-      py.globals.set("capture_print", py.pyimport("io").StringIO())
+      py.globals.set(
+        "capture_print",
+        py.pyimport("io").StringIO()
+      )
       py.runPython(`
 import sys
 sys.stdout = capture_print
@@ -231,30 +265,36 @@ sys.stdout = capture_print
       await py.runPythonAsync(code)
 
       const stdout = py.globals.get("capture_print").getvalue()
-      if (stdout) output.push(stdout)
+      if (stdout) out.push(stdout)
     } catch (e: any) {
-      output.push(`Error: ${e.message}`)
+      out.push(`Error: ${e.message}`)
     } finally {
       py.runPython("import sys; sys.stdout = sys.__stdout__")
     }
-
-    return output.length ? output.join("\n") : "Python code executed (no output)."
+    return out.length
+      ? out.join("\n")
+      : "Python code executed (no output)."
   }
 
-  // Unified runCode for all languages
+  /* ------------------------------------------------------------------ */
+  /* Unified run button                                                 */
+  /* ------------------------------------------------------------------ */
   const runCode = async () => {
     try {
       if (language === "javascript") {
         const logs: string[] = []
         const originalLog = console.log
-        console.log = (...args: any[]) => logs.push(args.join(" "))
+        console.log = (...args: any[]) =>
+          logs.push(args.join(" "))
         // eslint-disable-next-line no-eval
         eval(code)
         console.log = originalLog
-        setOutput(logs.length ? logs.join("\n") : "Code executed successfully!")
-      }
-
-      else if (language === "html") {
+        setOutput(
+          logs.length
+            ? logs.join("\n")
+            : "Code executed successfully!"
+        )
+      } else if (language === "html") {
         const iframe = document.createElement("iframe")
         iframe.style.width = "100%"
         iframe.style.height = "100%"
@@ -269,9 +309,7 @@ sys.stdout = capture_print
           doc.close()
         }
         setOutput("HTML rendered below.")
-      }
-
-      else if (language === "css") {
+      } else if (language === "css") {
         const preview = document.getElementById("css-preview")
         if (preview) {
           preview.innerHTML = `
@@ -284,9 +322,7 @@ sys.stdout = capture_print
           `
         }
         setOutput("CSS applied to demo below.")
-      }
-
-      else if (language === "python") {
+      } else if (language === "python") {
         const result = await runPython(code)
         setOutput(result)
       }
@@ -295,11 +331,16 @@ sys.stdout = capture_print
     }
   }
 
-  const loadLesson = (lessonIndex: number) => {
-    setCurrentLesson(lessonIndex)
-    const lesson = lessons[lessonIndex]
-    const availableLanguages = Object.keys(lesson.languages) as Language[]
-    const defaultLang = availableLanguages.includes(language) ? language : availableLanguages[0]
+  /* ------------------------------------------------------------------ */
+  /* Helper actions                                                    */
+  /* ------------------------------------------------------------------ */
+  const loadLesson = (idx: number) => {
+    setCurrentLesson(idx)
+    const lesson = lessons[idx]
+    const langs = Object.keys(lesson.languages) as Language[]
+    const defaultLang = langs.includes(language)
+      ? language
+      : langs[0]
     setLanguage(defaultLang)
     setCode(lesson.languages[defaultLang]!.code)
     setOutput("")
@@ -307,7 +348,10 @@ sys.stdout = capture_print
 
   const markComplete = () => {
     if (!completedLessons.includes(lessons[currentLesson].id)) {
-      setCompletedLessons([...completedLessons, lessons[currentLesson].id])
+      setCompletedLessons([
+        ...completedLessons,
+        lessons[currentLesson].id,
+      ])
     }
     if (currentLesson < lessons.length - 1) {
       loadLesson(currentLesson + 1)
@@ -329,32 +373,41 @@ sys.stdout = capture_print
   }
 
   const currentLessonData = lessons[currentLesson]
-  const currentLessonLang = currentLessonData.languages[language]
+  const currentLessonLang =
+    currentLessonData.languages[language]
 
+  /* ------------------------------------------------------------------ */
+  /* Render                                                            */
+  /* ------------------------------------------------------------------ */
   return (
     <main className="min-h-screen bg-black">
       <Navbar />
 
-      <section className="pt-32 pb-16 px-4 sm:px-6">
+      <section className="pt-20 pb-16 px-4 sm:px-6">
         <div className="container mx-auto max-w-[1800px]">
+          {/* Back link */}
           <Link
             to="/digitalhub"
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-6 text-sm transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Digital Hub
           </Link>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
-            Coding & <span className="text-primary">Software Development</span>
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            Coding &amp; <span className="text-primary">Software Development</span>
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-12">
+          <p className="text-base sm:text-lg text-muted-foreground mb-8">
             Learn HTML, CSS, JavaScript, and Python with hands-on coding and real execution.
           </p>
 
+          {/* Progress */}
           <div className="mb-8 p-4 rounded-2xl bg-card border-2 border-primary/30">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Learning Progress</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <span className="text-sm text-muted-foreground">
+                Learning Progress
+              </span>
               <span className="text-sm font-bold text-primary">
                 {completedLessons.length} / {lessons.length} Complete
               </span>
@@ -362,111 +415,144 @@ sys.stdout = capture_print
             <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${(completedLessons.length / lessons.length) * 100}%` }}
+                style={{
+                  width: `${(completedLessons.length / lessons.length) * 100}%`,
+                }}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
-            {/* Lessons Sidebar */}
-            <div className="lg:col-span-3">
-              <div className="p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-24">
-                <h3 className="text-xl font-bold text-white mb-4">Learning Path</h3>
+          {/* Main grid – 1 column on mobile, 3+9 on lg */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {/* Sidebar */}
+            <aside className="lg:col-span-3">
+              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-20 max-h-[60vh] overflow-y-auto">
+                <h3 className="text-lg font-bold text-white mb-3">
+                  Learning Path
+                </h3>
                 <div className="space-y-2">
-                  {lessons.map((lesson, index) => (
+                  {lessons.map((lesson, i) => (
                     <button
                       key={lesson.id}
-                      onClick={() => loadLesson(index)}
-                      className={`w-full p-3 rounded-xl transition-all text-left ${
-                        currentLesson === index
+                      onClick={() => loadLesson(i)}
+                      className={`w-full p-3 rounded-xl text-left text-sm transition-all ${
+                        currentLesson === i
                           ? "bg-primary text-black"
-                          : "bg-black/50 hover:bg-primary/10 border border-primary/20 hover:border-primary/50"
+                          : "bg-black/50 hover:bg-primary/10 border border-primary/20"
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
                             completedLessons.includes(lesson.id)
                               ? "bg-green-500 text-white"
-                              : currentLesson === index
+                              : currentLesson === i
                                 ? "bg-black text-primary"
                                 : "bg-primary/20 text-primary"
                           }`}
                         >
-                          {completedLessons.includes(lesson.id) ? "✓" : index + 1}
+                          {completedLessons.includes(lesson.id)
+                            ? "Done"
+                            : i + 1}
                         </div>
                         <span
-                          className={`text-sm font-medium ${currentLesson === index ? "text-black" : "text-white"}`}
+                          className={
+                            currentLesson === i
+                              ? "font-bold"
+                              : ""
+                          }
                         >
-                          Lesson {index + 1}
+                          Lesson {i + 1}
                         </span>
                       </div>
-                      <p className={`text-xs ${currentLesson === index ? "text-black/70" : "text-muted-foreground"}`}>
+                      <p
+                        className={`text-xs ${
+                          currentLesson === i
+                            ? "text-black/70"
+                            : "text-muted-foreground"
+                        } line-clamp-1`}
+                      >
                         {lesson.title}
                       </p>
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
+            </aside>
 
-            {/* Code Editor & Output */}
-            <div className="lg:col-span-9">
-              <div className="mb-6 p-6 rounded-3xl bg-card border-2 border-primary/30">
-                <div className="flex items-start justify-between mb-4">
+            {/* Editor + Output */}
+            <div className="lg:col-span-9 space-y-6">
+              {/* Lesson header */}
+              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-2">{currentLessonData.title}</h2>
-                    <p className="text-muted-foreground">{currentLessonData.description}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                      {currentLessonData.title}
+                    </h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      {currentLessonData.description}
+                    </p>
                   </div>
                   <button
-                    onClick={() => openYoutube(currentLessonData.youtubeUrl)}
-                    className="px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all flex items-center gap-2 whitespace-nowrap"
+                    onClick={() =>
+                      openYoutube(currentLessonData.youtubeUrl)
+                    }
+                    className="px-3 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all flex items-center gap-2 text-sm"
                   >
                     <Youtube className="h-4 w-4" />
-                    Watch Tutorial
+                    Watch
                   </button>
                 </div>
 
                 {currentLessonLang && (
-                  <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                    <p className="text-sm font-bold text-primary mb-1">Exercise:</p>
-                    <p className="text-sm text-white">{currentLessonLang.exercise}</p>
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-sm">
+                    <p className="font-bold text-primary mb-1">
+                      Exercise:
+                    </p>
+                    <p className="text-white">
+                      {currentLessonLang.exercise}
+                    </p>
                   </div>
                 )}
               </div>
 
-              {/* Code Editor */}
-              <div className="p-6 rounded-3xl bg-card border-2 border-primary/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              {/* Editor area */}
+              <div className="p-4 sm:p-6 rounded-3xl bg-card border-2 border-primary/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Code className="h-5 w-5 text-primary" />
                     Interactive Code Editor
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={runCode}
-                      className="px-6 py-3 rounded-xl bg-primary text-black font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
+                      className="px-4 py-2 rounded-xl bg-primary text-black font-bold hover:bg-primary/90 transition-all flex items-center gap-2 text-sm"
                     >
-                      <Play className="h-5 w-5" />
+                      <Play className="h-4 w-4" />
                       Run Code
                     </button>
                     <button
                       onClick={markComplete}
-                      className="px-6 py-3 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30 transition-all flex items-center gap-2"
+                      className="px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30 transition-all flex items-center gap-2 text-sm"
                     >
-                      <CheckCircle2 className="h-5 w-5" />
-                      {currentLesson < lessons.length - 1 ? "Next Lesson" : "Complete"}
+                      <CheckCircle2 className="h-4 w-4" />
+                      {currentLesson < lessons.length - 1
+                        ? "Next Lesson"
+                        : "Complete"}
                     </button>
                   </div>
                 </div>
 
-                {/* Language Tabs */}
-                <div className="flex gap-2 mb-4">
-                  {(Object.keys(currentLessonData.languages) as Language[]).map((lang) => (
+                {/* Language tabs – wrap on small screens */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(Object.keys(
+                    currentLessonData.languages
+                  ) as Language[]).map((lang) => (
                     <button
                       key={lang}
                       onClick={() => switchLanguage(lang)}
-                      className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                      className={`px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${
                         language === lang
                           ? "bg-primary text-black"
                           : "bg-black/50 text-muted-foreground hover:text-white border border-primary/20"
@@ -477,37 +563,52 @@ sys.stdout = capture_print
                   ))}
                 </div>
 
+                {/* Editor + preview / output */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Code Editor */}
+                  {/* Code editor */}
                   <div>
-                    <label className="block text-sm text-muted-foreground mb-2 font-medium">Code Editor</label>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Code Editor
+                    </label>
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-[500px] p-4 rounded-xl bg-black/50 border border-primary/20 text-white font-mono text-sm focus:outline-none focus:border-primary/50 resize-none"
+                      className="w-full h-[300px] sm:h-[500px] p-3 rounded-xl bg-black/50 border border-primary/20 text-white font-mono text-xs sm:text-sm focus:outline-none focus:border-primary/50 resize-none"
                       spellCheck={false}
                     />
                   </div>
 
-                  {/* Output / Preview */}
+                  {/* Preview / output */}
                   <div>
-                    <label className="block text-sm text-muted-foreground mb-2 font-medium">
-                      {language === "html" ? "HTML Preview" : language === "css" ? "CSS Preview" : "Output Panel"}
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      {language === "html"
+                        ? "HTML Preview"
+                        : language === "css"
+                          ? "CSS Preview"
+                          : "Output Panel"}
                     </label>
 
                     {language === "html" && (
-                      <div id="html-preview" className="h-[500px] bg-white rounded-xl overflow-hidden border border-primary/20" />
+                      <div
+                        id="html-preview"
+                        className="h-[300px] sm:h-[500px] bg-white rounded-xl overflow-hidden border border-primary/20"
+                      />
                     )}
 
                     {language === "css" && (
-                      <div id="css-preview" className="h-[500px] bg-white rounded-xl p-4 overflow-auto border border-primary/20" />
+                      <div
+                        id="css-preview"
+                        className="h-[300px] sm:h-[500px] bg-white rounded-xl p-3 overflow-auto border border-primary/20"
+                      />
                     )}
 
-                    {language !== "html" && language !== "css" && (
-                      <div className="w-full h-[500px] p-4 rounded-xl bg-black/50 border border-primary/20 text-primary font-mono text-sm overflow-auto whitespace-pre-wrap">
-                        {output || "Click 'Run Code' to see the actual output..."}
-                      </div>
-                    )}
+                    {language !== "html" &&
+                      language !== "css" && (
+                        <div className="w-full h-[300px] sm:h-[500px] p-3 rounded-xl bg-black/50 border border-primary/20 text-primary font-mono text-xs sm:text-sm overflow-auto whitespace-pre-wrap">
+                          {output ||
+                            "Click 'Run Code' to see the actual output..."}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -516,12 +617,14 @@ sys.stdout = capture_print
         </div>
       </section>
 
-      {/* YouTube Modal */}
+      {/* YouTube modal */}
       {showYoutubeModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-3xl border-2 border-primary/30 p-6 max-w-4xl w-full">
+          <div className="bg-card rounded-3xl border-2 border-primary/30 p-4 sm:p-6 max-w-4xl w-[95%]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Video Tutorial</h3>
+              <h3 className="text-lg font-bold text-white">
+                Video Tutorial
+              </h3>
               <button
                 onClick={() => setShowYoutubeModal(false)}
                 className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all flex items-center justify-center"
@@ -530,9 +633,14 @@ sys.stdout = capture_print
               </button>
             </div>
             <div className="aspect-video bg-black/50 rounded-xl flex items-center justify-center p-4">
-              <p className="text-muted-foreground text-center">
+              <p className="text-muted-foreground text-center text-sm">
                 YouTube video would load here: <br />
-                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
                   {youtubeUrl}
                 </a>
               </p>
