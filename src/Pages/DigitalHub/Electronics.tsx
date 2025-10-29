@@ -215,7 +215,6 @@ export default function Electronics() {
   const [voltage] = useState(9)
   const [, setSelectedCircuit] = useState<string | null>(null)
   const [expandedLesson, setExpandedLesson] = useState<number | null>(null)
-  const [draggedComponent, setDraggedComponent] = useState<Component | null>(null)
   const [selectedComponent, setSelectedComponent] = useState<ComponentType | null>(null)
   const [circuitWarning, setCircuitWarning] = useState<string | null>(null)
   const [savedCircuits, setSavedCircuits] = useState<
@@ -225,7 +224,12 @@ export default function Electronics() {
   const [activeTab, setActiveTab] = useState<"components" | "info">("components")
   const canvasRef = useRef<HTMLDivElement>(null)
 
-  // Track canvas size for centering
+  // Dragging state
+  const [isDragging, setIsDragging] = useState(false)
+  const [currentDragId, setCurrentDragId] = useState<string | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+
+  // Track canvas size
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 500 })
 
   useEffect(() => {
@@ -242,6 +246,63 @@ export default function Electronics() {
     return () => window.removeEventListener("resize", updateSize)
   }, [])
 
+  // Global pointer move/up for dragging
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDragging || !currentDragId || !canvasRef.current) return
+
+      const rect = canvasRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left - dragOffset.x
+      const y = e.clientY - rect.top - dragOffset.y
+
+      setComponents((prev) =>
+        prev.map((c) =>
+          c.id === currentDragId
+            ? { ...c, x: Math.max(0, Math.min(rect.width - 60, x)), y: Math.max(0, Math.min(rect.height - 60, y)) }
+            : c
+        )
+      )
+    }
+
+    const handlePointerUp = () => {
+      setIsDragging(false)
+      setCurrentDragId(null)
+    }
+
+    if (isDragging) {
+      window.addEventListener("pointermove", handlePointerMove)
+      window.addEventListener("pointerup", handlePointerUp)
+      window.addEventListener("pointercancel", handlePointerUp)
+    }
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", handlePointerUp)
+      window.removeEventListener("pointercancel", handlePointerUp)
+    }
+  }, [isDragging, currentDragId, dragOffset])
+
+  const handlePointerDown = (e: React.PointerEvent, component: Component) => {
+    // Ignore right-click
+    if (e.pointerType === "mouse" && e.button !== 0) return
+
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const clientX = e.clientX
+    const clientY = e.clientY
+
+    setIsDragging(true)
+    setCurrentDragId(component.id)
+    setDragOffset({
+      x: clientX - rect.left - component.x,
+      y: clientY - rect.top - component.y,
+    })
+
+    // Capture pointer
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
   const loadCircuit = (circuit: (typeof prebuiltCircuits)[0]) => {
     setComponents(circuit.components)
     setSelectedCircuit(circuit.name)
@@ -257,28 +318,6 @@ export default function Electronics() {
       })
     })
     setWires(newWires)
-  }
-
-  const handleDragStart = (component: Component) => {
-    setDraggedComponent(component)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    if (!draggedComponent || !canvasRef.current) return
-
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left - 30
-    const y = e.clientY - rect.top - 30
-
-    setComponents((prev) =>
-      prev.map((c) => (c.id === draggedComponent.id ? { ...c, x, y } : c))
-    )
-    setDraggedComponent(null)
   }
 
   const addComponentToCanvas = (type: ComponentType) => {
@@ -347,7 +386,7 @@ export default function Electronics() {
 
   const resizeComponent = (id: string, delta: number) => {
     setComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, scale: Math.max(0.5, Math.min(2, (c.scale || 1) + delta)) } : c)),
+      prev.map((c) => (c.id === id ? { ...c, scale: Math.max(0.5, Math.min(2, (c.scale || 1) + delta)) } : c))
     )
   }
 
@@ -381,7 +420,7 @@ export default function Electronics() {
               return { ...c, connections: [...c.connections, connectingFrom] }
             }
             return c
-          }),
+          })
         )
       }
 
@@ -406,7 +445,7 @@ export default function Electronics() {
           return { ...c, connections: c.connections.filter((id) => id !== wire.from) }
         }
         return c
-      }),
+      })
     )
   }
 
@@ -558,8 +597,6 @@ export default function Electronics() {
                 {/* Canvas */}
                 <div
                   ref={canvasRef}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
                   className="bg-black/50 rounded-2xl p-3 sm:p-4 min-h-80 sm:min-h-96 lg:min-h-[500px] border-2 border-primary/20 relative overflow-hidden"
                   style={{
                     backgroundImage: "radial-gradient(circle, #333 1px, transparent 1px)",
@@ -601,16 +638,22 @@ export default function Electronics() {
                   {components.map((component) => (
                     <div
                       key={component.id}
-                      draggable
-                      onDragStart={() => handleDragStart(component)}
-                      onClick={(e) => handleComponentClick(component.id, e)}
-                      className={`absolute cursor-move hover:scale-110 transition-transform group ${
+                      onPointerDown={(e) => handlePointerDown(e, component)}
+                      onClick={(e) => {
+                        if (isDragging) {
+                          e.stopPropagation()
+                          return
+                        }
+                        handleComponentClick(component.id, e)
+                      }}
+                      className={`absolute cursor-move select-none touch-none transition-transform group ${
                         connectingFrom === component.id ? "ring-4 ring-blue-400 rounded-full" : ""
-                      }`}
+                      } ${isDragging && currentDragId === component.id ? "z-50 scale-110 shadow-2xl" : ""}`}
                       style={{
                         left: component.x,
                         top: component.y,
                         transform: `scale(${component.scale || 1})`,
+                        touchAction: "none",
                       }}
                     >
                       <ComponentVisual
