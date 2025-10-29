@@ -12,13 +12,13 @@ const stories = [
         image: ImpactImage1,
     },
     {
-        name: "Sia M T Gborie",
+        name: "Jarai F Jalloh",
         school: "Bilingual High School",
         quote: "I built my first circuit in DevHer Club. It was the coolest thing I've ever done!",
         image: ImpactImage2,
     },
     {
-        name: "Jarie F Jalloh",
+        name: "Sia M T Gborie",
         school: "Bilingual High School",
         quote: "The mentors at DevHer inspired me to start my own coding club one day.",
         image: ImpactImage4,
