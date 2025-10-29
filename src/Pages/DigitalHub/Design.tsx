@@ -392,7 +392,7 @@ export default function Design() {
     }
   }, [selectedTextColor, selectedShapeId, shapes])
 
-  // EXPORT TO PNG – 100% WORKING
+  
   const exportToPNG = async () => {
     if (!canvasRef.current) return
 
