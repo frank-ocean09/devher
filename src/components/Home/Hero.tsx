@@ -46,21 +46,21 @@ const Hero = () => {
             <div className="flex items-center justify-center mb-3">
               <Star className="h-8 w-8 text-primary group-hover:animate-spin" />
             </div>
-            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">50+</div>
+            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">1</div>
             <div className="text-white font-medium">Schools Reached</div>
           </div>
           <div className="p-8 rounded-3xl bg-linear-to-br from-primary/20 to-primary/5 border-2 border-primary/30 hover:border-primary/60 transition-all hover:scale-105 group">
             <div className="flex items-center justify-center mb-3">
               <Heart className="h-8 w-8 text-primary group-hover:animate-bounce" />
             </div>
-            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">1,200+</div>
+            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">10+</div>
             <div className="text-white font-medium">Girls Trained</div>
           </div>
           <div className="p-8 rounded-3xl bg-linear-to-br from-primary/20 to-primary/5 border-2 border-primary/30 hover:border-primary/60 transition-all hover:scale-105 group">
             <div className="flex items-center justify-center mb-3">
               <Sparkles className="h-8 w-8 text-primary group-hover:animate-pulse" />
             </div>
-            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">25+</div>
+            <div className="text-5xl md:text-6xl font-bold text-primary mb-2">1+</div>
             <div className="text-white font-medium">Programs Run</div>
           </div>
         </div>
