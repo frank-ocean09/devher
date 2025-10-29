@@ -65,18 +65,24 @@ export default function Design() {
   const [selectedTextColor, setSelectedTextColor] = useState("#000000")
   const [selectedStrokeWidth] = useState(2)
   const [canvasBackground, setCanvasBackground] = useState("#FFFFFF")
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState("")
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null)
-  const [resizingId, setResizingId] = useState<string | null>(null)
-  const [resizeHandle, setResizeHandle] = useState<string | null>(null)
   const [rotatingId, setRotatingId] = useState<string | null>(null)
   const [rotateStartAngle, setRotateStartAngle] = useState(0)
   const [rotateStartRotation, setRotateStartRotation] = useState(0)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Dragging & Resizing State
+  const [isDragging, setIsDragging] = useState(false)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizingId, setResizingId] = useState<string | null>(null)
+  const [resizeHandle, setResizeHandle] = useState<string | null>(null)
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
 
   const saveToHistory = (newShapes: Shape[]) => {
     const newHistory = history.slice(0, historyIndex + 1)
@@ -169,108 +175,93 @@ export default function Design() {
     return theta
   }
 
-  const handleMouseDown = (e: React.MouseEvent, shapeId: string, handle?: string) => {
-    e.stopPropagation()
+  // ──────────────────────────────────────────────────────────────
+  //  Pointer Event Handlers (Mobile + Desktop)
+  // ──────────────────────────────────────────────────────────────
+  const handlePointerDown = (e: React.PointerEvent, shapeId: string, handle?: string) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return
+
     const shape = shapes.find((s) => s.id === shapeId)
-    if (!shape) return
+    if (!shape || !canvasRef.current) return
+
+    const rect = canvasRef.current.getBoundingClientRect()
+    const clientX = e.clientX - rect.left
+    const clientY = e.clientY - rect.top
 
     setSelectedShapeId(shapeId)
 
     if (handle === "rotate") {
       setRotatingId(shapeId)
-      const rect = canvasRef.current!.getBoundingClientRect()
-      const centerX = shape.x + shape.width / 2 + rect.left
-      const centerY = shape.y + shape.height / 2 + rect.top
-      const angle = getAngle(centerX, centerY, e.clientX, e.clientY)
+      const centerX = shape.x + shape.width / 2
+      const centerY = shape.y + shape.height / 2
+      const angle = getAngle(centerX, centerY, clientX, clientY)
       setRotateStartAngle(angle)
       setRotateStartRotation(shape.rotation || 0)
     } else if (handle && handle !== "move") {
+      setIsResizing(true)
       setResizingId(shapeId)
       setResizeHandle(handle)
+      setResizeStart({ x: clientX, y: clientY, width: shape.width, height: shape.height })
     } else {
-      const rect = e.currentTarget.getBoundingClientRect()
+      setIsDragging(true)
       setDraggingId(shapeId)
       setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - shape.x,
+        y: clientY - shape.y,
       })
     }
+
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: PointerEvent) => {
     if (!canvasRef.current) return
-    const canvas = canvasRef.current
-    const rect = canvas.getBoundingClientRect()
+    const rect = canvasRef.current.getBoundingClientRect()
+    const clientX = e.clientX - rect.left
+    const clientY = e.clientY - rect.top
 
-    if (draggingId) {
-      const newX = e.clientX - rect.left - dragOffset.x
-      const newY = e.clientY - rect.top - dragOffset.y
+    if (isDragging && draggingId) {
+      const shape = shapes.find((s) => s.id === draggingId)!
+      const newX = Math.max(0, Math.min(clientX - dragOffset.x, rect.width - shape.width))
+      const newY = Math.max(0, Math.min(clientY - dragOffset.y, rect.height - shape.height))
+
       setShapes((prev) =>
         prev.map((s) =>
-          s.id === draggingId
-            ? {
-                ...s,
-                x: Math.max(0, Math.min(newX, rect.width - s.width)),
-                y: Math.max(0, Math.min(newY, rect.height - s.height)),
-              }
+          s.id === draggingId ? { ...s, x: newX, y: newY } : s
+        )
+      )
+    } else if (isResizing && resizingId && resizeHandle) {
+      const shape = shapes.find((s) => s.id === resizingId)!
+      const deltaX = clientX - resizeStart.x
+      const deltaY = clientY - resizeStart.y
+      let newX = shape.x
+      let newY = shape.y
+      let newWidth = shape.width
+      let newHeight = shape.height
+
+      if (resizeHandle.includes("e")) newWidth = Math.max(20, resizeStart.width + deltaX)
+      if (resizeHandle.includes("w")) {
+        newWidth = Math.max(20, resizeStart.width - deltaX)
+        newX = shape.x + (shape.width - newWidth)
+      }
+      if (resizeHandle.includes("s")) newHeight = Math.max(20, resizeStart.height + deltaY)
+      if (resizeHandle.includes("n")) {
+        newHeight = Math.max(20, resizeStart.height - deltaY)
+        newY = shape.y + (shape.height - newHeight)
+      }
+
+      setShapes((prev) =>
+        prev.map((s) =>
+          s.id === resizingId
+            ? { ...s, x: newX, y: newY, width: newWidth, height: newHeight }
             : s
         )
       )
-    } else if (resizingId && resizeHandle) {
-      const mouseX = e.clientX - rect.left
-      const mouseY = e.clientY - rect.top
-      setShapes((prev) =>
-        prev.map((s) => {
-          if (s.id === resizingId) {
-            const newShape = { ...s }
-
-            if (resizeHandle === "e") newShape.width = Math.max(20, mouseX - s.x)
-            if (resizeHandle === "w") {
-              const newWidth = Math.max(20, s.x + s.width - mouseX)
-              newShape.x = mouseX
-              newShape.width = newWidth
-            }
-            if (resizeHandle === "s") newShape.height = Math.max(20, mouseY - s.y)
-            if (resizeHandle === "n") {
-              const newHeight = Math.max(20, s.y + s.height - mouseY)
-              newShape.y = mouseY
-              newShape.height = newHeight
-            }
-            if (resizeHandle === "ne") {
-              newShape.width = Math.max(20, mouseX - s.x)
-              const newHeight = Math.max(20, s.y + s.height - mouseY)
-              newShape.y = mouseY
-              newShape.height = newHeight
-            }
-            if (resizeHandle === "nw") {
-              const newWidth = Math.max(20, s.x + s.width - mouseX)
-              newShape.x = mouseX
-              newShape.width = newWidth
-              const newHeight = Math.max(20, s.y + s.height - mouseY)
-              newShape.y = mouseY
-              newShape.height = newHeight
-            }
-            if (resizeHandle === "se") {
-              newShape.width = Math.max(20, mouseX - s.x)
-              newShape.height = Math.max(20, mouseY - s.y)
-            }
-            if (resizeHandle === "sw") {
-              const newWidth = Math.max(20, s.x + s.width - mouseX)
-              newShape.x = mouseX
-              newShape.width = newWidth
-              newShape.height = Math.max(20, mouseY - s.y)
-            }
-
-            return newShape
-          }
-          return s
-        })
-      )
     } else if (rotatingId) {
       const shape = shapes.find((s) => s.id === rotatingId)!
-      const centerX = shape.x + shape.width / 2 + rect.left
-      const centerY = shape.y + shape.height / 2 + rect.top
-      const currentAngle = getAngle(centerX, centerY, e.clientX, e.clientY)
+      const centerX = shape.x + shape.width / 2
+      const centerY = shape.y + shape.height / 2
+      const currentAngle = getAngle(centerX, centerY, clientX, clientY)
       const delta = currentAngle - rotateStartAngle
       const newRotation = (rotateStartRotation + delta) % 360
       setShapes((prev) =>
@@ -279,15 +270,31 @@ export default function Design() {
     }
   }
 
-  const handleMouseUp = () => {
-    if (draggingId || resizingId || rotatingId) {
+  const handlePointerUp = () => {
+    if (isDragging || isResizing || rotatingId) {
       saveToHistory(shapes)
     }
+    setIsDragging(false)
     setDraggingId(null)
+    setIsResizing(false)
     setResizingId(null)
     setResizeHandle(null)
     setRotatingId(null)
   }
+
+  useEffect(() => {
+    if (isDragging || isResizing || rotatingId) {
+      window.addEventListener("pointermove", handlePointerMove)
+      window.addEventListener("pointerup", handlePointerUp)
+      window.addEventListener("pointercancel", handlePointerUp)
+    }
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", handlePointerUp)
+      window.removeEventListener("pointercancel", handlePointerUp)
+    }
+  }, [isDragging, isResizing, rotatingId, draggingId, resizingId, resizeHandle, resizeStart, dragOffset, rotateStartAngle, rotateStartRotation, shapes])
 
   const handleDoubleClick = (shape: Shape) => {
     if (shape.type === "text") {
@@ -436,7 +443,6 @@ export default function Design() {
         ctx.rotate((shape.rotation || 0) * (Math.PI / 180))
         ctx.translate(-cx, -cy)
 
-        // Rectangle / Circle
         if (shape.type === "rectangle" || shape.type === "circle") {
           ctx.fillStyle = shape.color
           ctx.strokeStyle = shape.strokeColor || "transparent"
@@ -450,10 +456,7 @@ export default function Design() {
             ctx.fillRect(shape.x, shape.y, shape.width, shape.height)
             ctx.strokeRect(shape.x, shape.y, shape.width, shape.height)
           }
-        }
-
-        // Text
-        else if (shape.type === "text" && shape.text) {
+        } else if (shape.type === "text" && shape.text) {
           ctx.font = `${shape.fontWeight === "bold" ? "bold " : ""}${
             shape.fontStyle === "italic" ? "italic " : ""
           }${shape.fontSize}px ${shape.fontFamily}`
@@ -461,10 +464,7 @@ export default function Design() {
           ctx.textAlign = (shape.textAlign as CanvasTextAlign) || "center"
           ctx.textBaseline = "middle"
           ctx.fillText(shape.text, cx, cy)
-        }
-
-        // Line / Arrow
-        else if ((shape.type === "line" || shape.type === "arrow") && shape.strokeColor) {
+        } else if ((shape.type === "line" || shape.type === "arrow") && shape.strokeColor) {
           ctx.strokeStyle = shape.strokeColor
           ctx.lineWidth = shape.strokeWidth || 2
           const y = shape.y + shape.height / 2
@@ -483,10 +483,7 @@ export default function Design() {
             ctx.fillStyle = shape.strokeColor
             ctx.fill()
           }
-        }
-
-        // Polygon / Star
-        else if (shape.type === "polygon" || shape.type === "star") {
+        } else if (shape.type === "polygon" || shape.type === "star") {
           const points = shape.points || 6
           const radius = Math.min(shape.width, shape.height) / 2
           const centerX = shape.x + shape.width / 2
@@ -507,10 +504,7 @@ export default function Design() {
           ctx.closePath()
           ctx.fill()
           ctx.stroke()
-        }
-
-        // Image (safe)
-        else if (shape.type === "image" && shape.imageUrl) {
+        } else if (shape.type === "image" && shape.imageUrl) {
           const img = new Image()
           img.crossOrigin = "anonymous"
           const loadPromise = new Promise<void>((resolve, reject) => {
@@ -866,10 +860,7 @@ export default function Design() {
             <div
               ref={canvasRef}
               className="rounded-2xl p-4 sm:p-6 min-h-80 sm:min-h-96 lg:min-h-[500px] relative overflow-hidden cursor-default"
-              style={{ backgroundColor: canvasBackground }}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: canvasBackground, touchAction: "none" }}
               onClick={() => setSelectedShapeId(null)}
             >
               {shapes.map((shape) => {
@@ -893,12 +884,12 @@ export default function Design() {
                     }}
                   >
                     <div
-                      className="w-full h-full cursor-move select-none"
+                      className="w-full h-full cursor-move select-none touch-none"
                       style={{
                         transform: `rotate(${rotation}deg)`,
                         transformOrigin: "center",
                       }}
-                      onMouseDown={(e) => handleMouseDown(e, shape.id, "move")}
+                      onPointerDown={(e) => handlePointerDown(e, shape.id, "move")}
                       onDoubleClick={() => handleDoubleClick(shape)}
                     >
                       {renderShape(shape)}
@@ -921,7 +912,7 @@ export default function Design() {
                                 marginTop: h.includes("n") ? 0 : h === "n" || h === "s" ? "-50%" : 0,
                                 marginLeft: h.includes("w") ? 0 : h === "w" || h === "e" ? "-50%" : 0,
                               }}
-                              onMouseDown={(e) => handleMouseDown(e, shape.id, h)}
+                              onPointerDown={(e) => handlePointerDown(e, shape.id, h)}
                             />
                           )
                         })}
@@ -930,7 +921,7 @@ export default function Design() {
                           <div className="w-px h-8 bg-primary/50" />
                           <div
                             className="w-6 h-6 bg-white border-2 border-primary rounded-full cursor-grab active:cursor-grabbing pointer-events-auto shadow-lg flex items-center justify-center"
-                            onMouseDown={(e) => handleMouseDown(e, shape.id, "rotate")}
+                            onPointerDown={(e) => handlePointerDown(e, shape.id, "rotate")}
                           >
                             <RotateCw className="h-3 w-3 text-primary" />
                           </div>
