@@ -1,6 +1,4 @@
-
-
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import Navbar from "@/components/Utils/Navbar"
 import { ArrowLeft, Play, Code, Youtube, CheckCircle2, X } from "lucide-react"
@@ -201,38 +199,99 @@ export default function Coding() {
   const [showYoutubeModal, setShowYoutubeModal] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState("")
 
-  const runCode = () => {
+  // Pyodide loading (once)
+  const pyodideReady = useRef<Promise<any> | null>(null)
+
+  useEffect(() => {
+    if (!pyodideReady.current) {
+      const script = document.createElement("script")
+      script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"
+      script.onload = async () => {
+        // @ts-ignore
+        const py = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.1/full/" })
+        pyodideReady.current = py
+      }
+      document.body.appendChild(script)
+    }
+  }, [])
+
+  // Real Python execution
+  const runPython = async (code: string): Promise<string> => {
+    const py = await pyodideReady.current
+    if (!py) return "Pyodide is still loading..."
+
+    const output: string[] = []
+    try {
+      py.globals.set("capture_print", py.pyimport("io").StringIO())
+      py.runPython(`
+import sys
+sys.stdout = capture_print
+      `)
+
+      await py.runPythonAsync(code)
+
+      const stdout = py.globals.get("capture_print").getvalue()
+      if (stdout) output.push(stdout)
+    } catch (e: any) {
+      output.push(`Error: ${e.message}`)
+    } finally {
+      py.runPython("import sys; sys.stdout = sys.__stdout__")
+    }
+
+    return output.length ? output.join("\n") : "Python code executed (no output)."
+  }
+
+  // Unified runCode for all languages
+  const runCode = async () => {
     try {
       if (language === "javascript") {
         const logs: string[] = []
         const originalLog = console.log
-        console.log = (...args) => {
-          logs.push(args.join(" "))
-        }
+        console.log = (...args: any[]) => logs.push(args.join(" "))
         // eslint-disable-next-line no-eval
         eval(code)
         console.log = originalLog
-        setOutput(logs.length > 0 ? logs.join("\n") : "Code executed successfully!")
-      } else if (language === "html") {
-        setOutput("HTML Preview:\n\n" + code + "\n\n(In a real browser, this would render as a webpage)")
-      } else if (language === "css") {
-        setOutput("CSS Styles:\n\n" + code + "\n\n(These styles would be applied to HTML elements)")
-      } else if (language === "python") {
-        // Simulate Python execution
-        const lines = code.split("\n")
-        const outputs: string[] = []
-        lines.forEach((line) => {
-          if (line.trim().startsWith("print(")) {
-            const match = line.match(/print$$(.*)$$/)
-            if (match) {
-              outputs.push(match[1].replace(/['"]/g, ""))
-            }
-          }
-        })
-        setOutput(outputs.length > 0 ? outputs.join("\n") : "Python code executed!")
+        setOutput(logs.length ? logs.join("\n") : "Code executed successfully!")
       }
-    } catch (error) {
-      setOutput(`Error: ${error}`)
+
+      else if (language === "html") {
+        const iframe = document.createElement("iframe")
+        iframe.style.width = "100%"
+        iframe.style.height = "100%"
+        iframe.style.border = "none"
+        const container = document.getElementById("html-preview")
+        if (container) {
+          container.innerHTML = ""
+          container.appendChild(iframe)
+          const doc = iframe.contentDocument!
+          doc.open()
+          doc.write(code)
+          doc.close()
+        }
+        setOutput("HTML rendered below.")
+      }
+
+      else if (language === "css") {
+        const preview = document.getElementById("css-preview")
+        if (preview) {
+          preview.innerHTML = `
+            <style>${code}</style>
+            <div class="demo p-6 text-center">
+              <h1 class="text-3xl font-bold mb-2">Demo Text</h1>
+              <p class="text-lg">Style me with CSS!</p>
+              <button class="mt-4 px-6 py-2 bg-primary text-black rounded-lg">Click Me</button>
+            </div>
+          `
+        }
+        setOutput("CSS applied to demo below.")
+      }
+
+      else if (language === "python") {
+        const result = await runPython(code)
+        setOutput(result)
+      }
+    } catch (error: any) {
+      setOutput(`Error: ${error.message || error}`)
     }
   }
 
@@ -309,7 +368,7 @@ export default function Coding() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
-            {/* Lessons Sidebar - Left */}
+            {/* Lessons Sidebar */}
             <div className="lg:col-span-3">
               <div className="p-6 rounded-3xl bg-card border-2 border-primary/30 sticky top-24">
                 <h3 className="text-xl font-bold text-white mb-4">Learning Path</h3>
@@ -351,7 +410,7 @@ export default function Coding() {
               </div>
             </div>
 
-            {/* Code Editor & Output - Center/Right */}
+            {/* Code Editor & Output */}
             <div className="lg:col-span-9">
               <div className="mb-6 p-6 rounded-3xl bg-card border-2 border-primary/30">
                 <div className="flex items-start justify-between mb-4">
@@ -370,7 +429,7 @@ export default function Coding() {
 
                 {currentLessonLang && (
                   <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                    <p className="text-sm font-bold text-primary mb-1">💡 Exercise:</p>
+                    <p className="text-sm font-bold text-primary mb-1">Exercise:</p>
                     <p className="text-sm text-white">{currentLessonLang.exercise}</p>
                   </div>
                 )}
@@ -419,6 +478,7 @@ export default function Coding() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Code Editor */}
                   <div>
                     <label className="block text-sm text-muted-foreground mb-2 font-medium">Code Editor</label>
                     <textarea
@@ -428,11 +488,26 @@ export default function Coding() {
                       spellCheck={false}
                     />
                   </div>
+
+                  {/* Output / Preview */}
                   <div>
-                    <label className="block text-sm text-muted-foreground mb-2 font-medium">Output Panel</label>
-                    <div className="w-full h-[500px] p-4 rounded-xl bg-black/50 border border-primary/20 text-primary font-mono text-sm overflow-auto whitespace-pre-wrap">
-                      {output || "Click 'Run Code' to see the actual output..."}
-                    </div>
+                    <label className="block text-sm text-muted-foreground mb-2 font-medium">
+                      {language === "html" ? "HTML Preview" : language === "css" ? "CSS Preview" : "Output Panel"}
+                    </label>
+
+                    {language === "html" && (
+                      <div id="html-preview" className="h-[500px] bg-white rounded-xl overflow-hidden border border-primary/20" />
+                    )}
+
+                    {language === "css" && (
+                      <div id="css-preview" className="h-[500px] bg-white rounded-xl p-4 overflow-auto border border-primary/20" />
+                    )}
+
+                    {language !== "html" && language !== "css" && (
+                      <div className="w-full h-[500px] p-4 rounded-xl bg-black/50 border border-primary/20 text-primary font-mono text-sm overflow-auto whitespace-pre-wrap">
+                        {output || "Click 'Run Code' to see the actual output..."}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -441,6 +516,7 @@ export default function Coding() {
         </div>
       </section>
 
+      {/* YouTube Modal */}
       {showYoutubeModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-3xl border-2 border-primary/30 p-6 max-w-4xl w-full">
@@ -453,16 +529,19 @@ export default function Coding() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="aspect-video bg-black/50 rounded-xl flex items-center justify-center">
-              <p className="text-muted-foreground">YouTube video would load here: {youtubeUrl}</p>
+            <div className="aspect-video bg-black/50 rounded-xl flex items-center justify-center p-4">
+              <p className="text-muted-foreground text-center">
+                YouTube video would load here: <br />
+                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                  {youtubeUrl}
+                </a>
+              </p>
             </div>
           </div>
         </div>
-
-
-
       )}
-      <Footer/>
+
+      <Footer />
     </main>
   )
 }
