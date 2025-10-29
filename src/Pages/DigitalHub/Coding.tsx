@@ -224,9 +224,6 @@ export default function Coding() {
 
   const pyodideReady = useRef<Promise<any> | null>(null)
 
-  /* ------------------------------------------------------------------ */
-  /* Pyodide loading (once)                                            */
-  /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (!pyodideReady.current) {
       const script = document.createElement("script")
@@ -244,9 +241,7 @@ export default function Coding() {
     }
   }, [])
 
-  /* ------------------------------------------------------------------ */
-  /* Python execution                                                   */
-  /* ------------------------------------------------------------------ */
+  
   const runPython = async (code: string): Promise<string> => {
     const py = await pyodideReady.current
     if (!py) return "Pyodide is still loading..."
@@ -276,9 +271,7 @@ sys.stdout = capture_print
       : "Python code executed (no output)."
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Unified run button                                                 */
-  /* ------------------------------------------------------------------ */
+  
   const runCode = async () => {
     try {
       if (language === "javascript") {
@@ -422,7 +415,6 @@ sys.stdout = capture_print
             </div>
           </div>
 
-          {/* Main grid – 1 column on mobile, 3+9 on lg */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             {/* Sidebar */}
@@ -544,7 +536,7 @@ sys.stdout = capture_print
                   </div>
                 </div>
 
-                {/* Language tabs – wrap on small screens */}
+                {/* Language tabs */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {(Object.keys(
                     currentLessonData.languages
