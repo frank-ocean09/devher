@@ -9,7 +9,7 @@ const Digitalhub = () => {
       title: "Electronics & Hardware",
       description: "Experiment with simple circuits directly on your screen.",
       icon: Cpu,
-      link: "/digital-hub/electronics",
+      link: "digital-hub/electronics",
       buttonText: "Try Electronics",
     },
     {
