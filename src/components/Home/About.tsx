@@ -4,7 +4,7 @@ import AboutImage from "@/assets/About.jpg"
 const About = () => {
   return (
     <section id="about" className="py-24 px-6 relative overflow-hidden">
-      {/* Subtle gradient overlay */}
+      
       <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/5 to-transparent pointer-events-none" />
 
       <div className="container mx-auto relative z-10">
