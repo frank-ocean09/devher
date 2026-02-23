@@ -11,25 +11,36 @@ import Digitalhub from "./Pages/DigitalHub/Digitalhub"
 import Electronics from "./Pages/DigitalHub/Electronics"
 import Pitch from "./Pages/DigitalHub/Pitch"
 import Home from "./Pages/Home/Home"
-import { Route, Routes } from "react-router-dom"
+import { useEffect } from "react"
+import { Route, Routes, useLocation } from "react-router-dom"
+
 function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      document.body.classList.add("hide-chatbot")
+    } else {
+      document.body.classList.remove("hide-chatbot")
+    }
+  }, [location])
 
   return (
     <Routes>
-      <Route path="/" element={<Home/>}/>
-      <Route path="/about" element={<About/>}/>
-       <Route path="/Programs" element={<Programs/>}/>
-       <Route path="/DigitalHubCTA" element={<DigitalHubCTA/>}/>
-       <Route path="/Impact" element={<Impact/>}/>
-       <Route path="/Partner" element={<Partner/>}/>
-       <Route path="/Gallery" element={<Gallery/>}/>
-       <Route path="/Contact" element={<Contact/>}/>
-       <Route path="/digitalhub" element={<Digitalhub/>}/>
-      <Route path="/digital-hub/electronics" element={<Electronics/>}/>
-       <Route path="/digital-hub/coding" element={<Coding/>}/>
-       <Route path="/digital-hub/Design" element={<Design/>}/>
-       <Route path="/digital-hub/Pitch" element={<Pitch/>}/>
-        </Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/Programs" element={<Programs />} />
+      <Route path="/DigitalHubCTA" element={<DigitalHubCTA />} />
+      <Route path="/Impact" element={<Impact />} />
+      <Route path="/Partner" element={<Partner />} />
+      <Route path="/Gallery" element={<Gallery />} />
+      <Route path="/Contact" element={<Contact />} />
+      <Route path="/digitalhub" element={<Digitalhub />} />
+      <Route path="/digital-hub/electronics" element={<Electronics />} />
+      <Route path="/digital-hub/coding" element={<Coding />} />
+      <Route path="/digital-hub/Design" element={<Design />} />
+      <Route path="/digital-hub/Pitch" element={<Pitch />} />
+    </Routes>
   )
 }
 

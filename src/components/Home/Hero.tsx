@@ -31,7 +31,7 @@ const Hero = () => {
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all text-base px-8 shadow-lg shadow-primary/30"
             >
-              Start a Club
+              Get Started
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </a>

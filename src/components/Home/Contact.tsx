@@ -28,11 +28,17 @@ export function Contact() {
     setIsSubmitting(true)
     setSubmitStatus("idle")
 
-    // Simulate form submission
+    const subject = encodeURIComponent(`Message from ${formData.name}`)
+    const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`)
+    const mailtoLink = `mailto:devher.info@gmail.com?subject=${subject}&body=${body}`
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      window.open(mailtoLink, "_blank")
       setSubmitStatus("success")
-      setFormData({ name: "", email: "", message: "" })
+      // Clear form after a short delay so user can see it's working
+      setTimeout(() => {
+        setFormData({ name: "", email: "", message: "" })
+      }, 500)
     } catch (error) {
       setSubmitStatus("error")
     } finally {
@@ -127,7 +133,7 @@ export function Contact() {
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Email</h3>
                 <a
-                  href="mailto:hello@devher.org"
+                  href="mailto:devher.info@gmail.com"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   devher.info@gmail.com
