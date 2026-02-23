@@ -13,11 +13,7 @@ const Hero = () => {
       />
 
       <div className="container mx-auto text-center relative z-10">
-        <div className="inline-flex items-center gap-2 mb-6 px-6 py-3 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-sm font-bold">DevHer for Schools</span>
-          <Heart className="h-4 w-4" />
-        </div>
+
 
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight text-balance">
           Empowering the Next Generation of{" "}
@@ -26,19 +22,19 @@ const Hero = () => {
 
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed">
           DevHer School Club is transforming schools into spaces where girls learn, build, and create with technology.
-          
+
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a href="/contact">
-          <Button
-            size="lg"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all text-base px-8 shadow-lg shadow-primary/30"
-          >
-            Start a Club
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-         </a>
+            <Button
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all text-base px-8 shadow-lg shadow-primary/30"
+            >
+              Start a Club
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 max-w-4xl mx-auto">
